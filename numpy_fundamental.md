@@ -183,3 +183,7 @@ y = x + v
     + np.delete는 matrix에서 원하는 idx를 axis 방향으로 없앤 값을 리턴한다.
     + np.concatenate 함수에 matrix를 넣으면 쭉 펼쳐준다.
     + 위 코드는 CS231n의 코드로, X_train_folds가 np.array_split의 결과값인 list 타입이다. 저기서 delete로 원하는 인덱스는 제외하고, 나머지를 concatenate해줘야 정상적인 matrix 형태가 나온다.
+- `x = v[None, :]`, `x = v[:, None]`
+    + 데이터의 차원을 높일 때 자주 쓰는 방식. 예를 들어 `v = np.array([[1, 2], [3, 4]])` 매트릭스가 있을 때
+    + `v[None, :]` 의 shape은 (1, 2, 2)가 되고
+    + `v[:, None]` 의 shape은 (2, 1, 2)가 된다.
