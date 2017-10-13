@@ -95,3 +95,15 @@ def penn_to_wn(tag):
 if __name__ == "__main__":
     main()
 ```
+
+## 2. corpus 사용해보기
+
+brown corpus에서 카테고리별로 단어 뽑을 수 있다.
+
+```py
+from nltk.corpus import brown
+
+for genre in brown.categories():
+    for word in brown.words(categories=genre):
+        print(word)
+```
