@@ -79,3 +79,13 @@ F1_score = 2 / (1/recall + 1/precision)
 - 두 메트릭을 모두 고려하는 방식
 
 ## 2. ROC curve, AUC
+
+![roc1](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Roccurves.png/440px-Roccurves.png)
+
+- ROC curve(Reciever Operating Characteristic curve): X축이 FPR(or `1 - TNR`), Y축이 TPR(=recall) 인 그래프
+- 선을 이루는 각 포인트들은 threshold가 달라지면서 변하는 각 FPR, TPR 포인트들을 이은 것이다.
+- 선의 아래쪽 면적을 AUC(Area Under the Curve)라고 한다. AUC가 클수록 좋은 모델이다.
+- 위 이미지처럼 각각의 모델마다 ROC curve를 그려서 AUC를 구하고, 가장 높은 AUC를 가지는 모델을 선택한다. 즉 모델 비교에 쓰인다.
+- 모델을 결정한 후에 최적의 cutoff를 정한다. cutoff란 logistic regression에서 어떤 수치 이상을 positive로 평가할 것인지 수치를 말한다. 기본적으로 0.5다. 모델을 결정하면 해당 모델에서 모든 cutoff에 대해서 성능을 측정하고 가장 좋은 cutoff 수치를 선택한다.
+
+![roc2](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/ROC_curves.svg/600px-ROC_curves.svg.png)
