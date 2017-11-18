@@ -9,7 +9,7 @@ SVM loss는 Hinge loss라고도 불린다. 처음 SVM을 배울 때 constraint�
 > source: CS231n Lecture 3 - 7th slide
 
 - Notation
-    + 이미지는 feature가 매우 많지만, 설명의 편의를 위해 2개만 있는걸로 생각하겠다. 그래서 좌표평면에 나타낸 것이 위 이미지와 같다. 축은 x1과 x2 데이터 두 축이다.
+    + 이미지는 feature가 매우 많지만, 설명의 편의를 위해 2개만 있는걸로 생각하겠다. 그래서 좌표평면에 나타낸 것이 위 그래프와 같다. 축은 x1과 x2 데이터 두 축이다.
     + 편의상 car classifier의 parameter를 `w1`, `w2`, `b`라고 나타낼 것이고, 물론 다른 airplane, deer classifier 각각 parameter들이 존재한다.
 - car classifier를 나타내는 직선은 `w1x1 + w2x2 + b = 0` 으로 표현할 수 있다. 즉 이 수식에 데이터 (x1, x2)를 집어넣었을 때 0 값이 나오는 데이터들을 쭉 직선으로 이은 것이다.
     + 값이 0보다 크다면, 해당 class로 분류를 하는 것이고, 값이 0보다 작다면, 해당 class가 아니라고 분류를 한다.
@@ -24,6 +24,8 @@ SVM loss는 Hinge loss라고도 불린다. 처음 SVM을 배울 때 constraint�
 - 법선벡터는 결국 우리가 최적화해야할 모든 weight 값들을 갖고 있다. 처음 학습을 시작할 때 wegith들을 매우 작은 값으로 랜덤 초기화하는데 이것은 위 그래프에서 아무렇게나 그래프를 랜덤으로 그리는 것이다. 그리고 점점 데이터를 잘 분류하도록 그래프의 위치와 기울기를 변경해나갈 것이고, 이런 과정이 "학습"이다.
 
 ![3d-hyperplane](https://i.imgur.com/askA6BZ.png)
+
+> 우측 그래프에서 녹색 hyperplane 위 데이터 포인트의 색깔이 반대로 칠해진 것 같다.
 
 - 위에서 classifier 수식 값의 기준이 0인지는 어떻게 정해지는 것일까. logistic regression이라면 위 이미지에서처럼 cutoff(threshold)를 어떤 수치로 정하느냐에 따라 달라진다.
 - 0.5로 cutoff를 정했을 때는 위처럼 classifier 직선이 저 교차점에 그려지는 것이고, 저 지점은 수식의 값이 0인, 즉 sigmoid를 씌웠을 때 0.5 값이 나오는 지점이다.
@@ -49,12 +51,13 @@ SVM loss는 Hinge loss라고도 불린다. 처음 SVM을 배울 때 constraint�
 
 ### 2.2 Delta를 주면 좋은 예제 1
 
-![delta](https://i.imgur.com/SugeCFZ.png)
+![delta](https://i.imgur.com/vhUf1Qn.png)
 
 - 위 그래프는 3개 class의 multinomial logistic regression이다.
-- 만약 delta가 0이라면 Classifier blue가 실선에서 점선으로 이동할까? 이동하지 않는다. 이유는 실선일 때 Loss가 0이기 때문이다. Classifier blue가 "별 데이터"를 긍정으로 잘못 예측하고 있지만, Classifier red가 더 큰 값으로 잘 예측하고 있기 때문에 SVM loss는 0이다. loss가 0이면 더 이상 최적화가 이루어지지 않는다.
-- 그래서 Delta 값을 줘서 loss 값을 키운다. 수식에서 `(S_j + delta) - S_y` 처럼 묶어서 표현해보면 다른 클래스로 판단하는 score 값을 키우는 것과 같은 의미다. 위 이미지에서 빨간 별 데이터의 blue score를 더 키워서 red score보다 커지게 한 후 loss로 계산하는 것이다.
-- 그러면 loss가 생기고, 줄이기 위해 학습이 되면서 파란 실선이 파란 점선으로 좀 더 최적화될 가능성이 생긴다.
+- 만약 delta를 주지 않았다면(delta=0) Classifier blue가 실선에서 점선으로 이동할까? 이동하지 않는다. 이유는 실선일 때 Loss가 0이기 때문이다.
+- Classifier blue가 "별 데이터"를 긍정으로 잘못 예측하고 있지만, Classifier red가 더 큰 값으로 잘 예측하고 있기 때문에(`Sy > Sj`) SVM loss는 0이다. loss가 0이면 더 이상 최적화가 이루어지지 않는다.
+- 그래서 Delta 값을 줘서 loss를 키운다. 수식에서 `(S_j + delta) - S_y` 처럼 묶어서 표현해보면 다른 클래스로 판단하는 score 값을 키우는 것과 같은 의미다. 위 이미지에서 빨간 별 데이터의 blue score를 더 키워서 red score보다 커지게 한 후 loss로 계산하는 것이다. 빨간 별 데이터의 blue score를 계산할 때 마치 빨간 별 데이터가 더 위에 있는 것처럼 계산되는 것과 같다.
+- 그러면 loss가 생기고, 줄이기 위해 학습이 되면서 파란 실선이 파란 점선으로 좀 더 최적화될 가능성이 생긴다. 무조건 항상 파란 점선 위치로 가지 않는다. 학습 중 로스의 감소폭이 너무 작아서 멈춰버릴 수도 있다.
 
 ![delta3](http://cs231n.github.io/assets/margin.jpg)
 
@@ -68,9 +71,12 @@ SVM loss는 Hinge loss라고도 불린다. 처음 SVM을 배울 때 constraint�
 - 위 이미지에서 만약 delta 값이 없다면 weight 벡터가 어떻게 초기화되고, 최적화되느냐에 따라 Classifier blue의 위치가 위 둘 중 어떤것도 될 수 있다. 왜냐면 둘 모두 SVM loss가 0이기 때문.
 - 그런데 둘 다 딱히 좋은 hyperplane은 아니다. 하나는 yellow에 치우쳐있고, 하나는 blue에 너무 치우쳐져있다. 이걸 적절하게 고르도록 도와주는 것이 delta다.
 
-![delta2](https://i.imgur.com/IEJQPOW.png)
+![delta2](https://i.imgur.com/pY79xg9.png)
 
-- 예를 들어서 지금 blue classifier만 조정되어야한다고 해보자. yellow 데이터에 대해서 로스를 계산할 때, delta를 주면 blue, red score가 올라가게 된다.
-- blue score를 올린다는 말은 위처럼 데이터가 마치 위로 이동된 것처럼 생각해서 score를 계산한다고 볼 수 있겠다. 그에 맞춰서 classifier의 위치도 최적화 될 것이고 이미지에서처럼 blue classifier가 저렇게 꼭 평행이동하는 것은 아니겠지만 그에 맞게 이동할 것이다.
+- 예를 들어서 지금 blue classifier만 조정되어야한다고 해보자. yellow 데이터에 대해서 로스를 계산할 때, delta를 주면 yellow 데이터의 blue, red score가 올라가게 된다.
+- blue score를 올린다는 말은 위처럼 데이터가 마치 위로 이동된 것처럼 생각해서 score를 계산한다고 볼 수 있다. 그에 맞춰서 classifier의 위치도 최적화 될 것이고 이미지에서처럼 blue classifier가 적절하게 이동할 것이다.
+
+### 2.3 Cross validation
+
 - delta는 hyperparameter이고 Cross validation을 통해 얼마나 이동하는 것이 가장 적절한 hyperplane의 위치인지 알아내야한다.
 - delta로 score를 잘 조정하면 classifier들을 전체 데이터에 생김새(분포)에 맞게 적절하게 잘 위치시킬 수 있다.
