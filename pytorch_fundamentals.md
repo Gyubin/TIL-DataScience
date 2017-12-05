@@ -59,9 +59,9 @@ print(x.grad, w.grad)
     + `requires_grad` : grad를 계산한다고 한 값인지 Boolean으로 리턴. leaf node에서만 바뀔 수 있다.
     + `is_leaf` – leaf인지, 즉 user가 1차로 만든 값인지
     + `grad_fn` – 만들어진 미분 공식
-- 미분 계산을 쉽게 할 수 있다. `Variable` 안에 데이터를 넣고, gradient를 계산할지 말지를 boolean으로 정해준다.
-- 위처럼 다음으로 넘어가는 graph를 그리고, 최종 값인 `out`은 스칼라 값으로 한다.
-- 미분을 계산할 기준이 out이라면 out에서 `backward()` 함수를 호출하나.
+- Variable을 이용하면 미분을 쉽게 구할 수 있다. 미분을 계산할 값은 위의 `out` 값처럼 스칼라값으로만 설정해줘야한다.
+- 기준이 되는 스칼라값에서 `backward()` 함수를 호출한다.
 - 호출한 이후에 `x`와 `w`에서 미분값을 가져올 수 있다.
     + `x.grad` = d(out) / d(x)
     + `w.grad` = d(out) / d(w)
+    + `z` 같은 경우, 즉 user가 1차로 만든 값이 아니면 미분값을 구하지 않는다.
