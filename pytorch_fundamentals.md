@@ -26,6 +26,7 @@ pip3 install torchvision
     + `a=np.ones(5) ; b=torch.from_numpy(a)`
     + `np.add(a, 1, out=a)`
     + `print(a, b)` : 역시 b도 영향을 받는다.
+- `.norm()` : norm 값 구할 수 있다.
 - tensor를 GPU로 옮기고싶다면 `.cuda()`
 
     ```py
@@ -59,9 +60,158 @@ print(x.grad, w.grad)
     + `requires_grad` : grad를 계산한다고 한 값인지 Boolean으로 리턴. leaf node에서만 바뀔 수 있다.
     + `is_leaf` – leaf인지, 즉 user가 1차로 만든 값인지
     + `grad_fn` – 만들어진 미분 공식
-- Variable을 이용하면 미분을 쉽게 구할 수 있다. 미분을 계산할 값은 위의 `out` 값처럼 스칼라값으로만 설정해줘야한다.
+- Variable을 이용하면 미분을 쉽게 구할 수 있다.
+    + `out.backward(gradient=None)` : gradient 파라미터의 디폴트값이 None이다. 그래서 파라미터로 넘겨주는게 없으면 out은 무조건 스칼라값이어야한다.
+    + `out.backward(gradient=torch.randn(1, 10))` : 만약 classification 문제에서 클래스가 10개라면 저런식으로 차원을 지정해줘야한다.
 - 기준이 되는 스칼라값에서 `backward()` 함수를 호출한다.
 - 호출한 이후에 `x`와 `w`에서 미분값을 가져올 수 있다.
     + `x.grad` = d(out) / d(x)
     + `w.grad` = d(out) / d(w)
     + `z` 같은 경우, 즉 user가 1차로 만든 값이 아니면 미분값을 구하지 않는다.
+
+## 3. nn
+
+- `torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)`
+    + `in_channels`, `out_channels`: input, output 지정
+    + `kernel_size` : int 하나만 주면 정방, tuple로 주면 첫 번째가 height, 두 번째가 width
+    + `stride`, `padding`: 역시 tuple로 다른 값을 줄 수 있다.
+    + `dilation` : [link](https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md) 참조
+    + variable로 `weight`, `bias` 호출 가능
+- `torch.nn.Linear(in_features, out_features, bias=True)`
+    + 레이어의 dims를 Fully connected layer 방식으로 변환하는 함수다.
+    + 즉 이 함수로 만들어지는 값은 `(input_c, output_c)`의 **WEIGHT MATRIX**다.
+    + 데이터를 나타내는 것은 row이고, feature가 column인데 이 feature channel을 바꿔주는 것. row는 건드리지 않는다. 다만 size는 매칭되어야한다.
+
+    ```py
+    input = torch.autograd.Variable(torch.randn(128, 20))
+    m = torch.nn.Linear(20, 30)
+    output = m(input)
+    print(output.size()) # 128, 30
+    ```
+
+## 4. Basic CNN
+
+### 4.1 Forward
+
+![convnet](http://pytorch.org/tutorials/_images/mnist.png)
+
+```py
+import torch
+from torch.autograd import Variable
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class Net(nn.Module):
+
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = x.view(-1, self.num_flat_features(x))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+    def num_flat_features(self, x):
+        size = x.size()[1:]
+        num_features = 1
+        for s in size:
+            num_features *= s
+        return num_features
+```
+
+- 구조
+    + `nn.Module` 클래스를 상속
+    + `__init__` : 부모 클래스의 것을 기본적으로 가져오고, 내가 필요한 레이어들을 정의한다. 위 예제에서는 conv 2개, fc 3개다.
+    + `forward` : 데이터를 받아서 내가 설정한 아키텍처 구조에 따라서 연산을 진행하는 과정이다.
+- `num_flat_features` : batch 수를 나타내는 첫 번째 dimension은 제외하고 뒤의 channel, height, width를 다 곱한 값을 리턴해주는 함
+- `x.view(d1, d2)` : reshape 역할을 하는 함수다.
+
+### 4.2 Backward
+
+```py
+net = Net()
+input = Variable(torch.randn(1, 1, 32, 32))
+out = net(input)
+
+net.zero_grad()
+out.backward(torch.randn(1, 10))
+
+target = Variable(torch.arange(1, 11))
+criterion = nn.MSELoss()
+
+loss = criterion(output, target)
+
+print(loss.grad_fn)  # MSELoss
+print(loss.grad_fn.next_functions[0][0])  # Linear
+print(loss.grad_fn.next_functions[0][0].next_functions[0][0])  # ReLU
+```
+
+- 모델 인스턴스를 만들고, 인풋 데이터를 1개, 1채널 32x32 사이즈로 준비한다. 그리고 데이터를 모델에 넣어서 out 값을 저장한다.
+- `net_instance.zero_grad()` : 모든 weight의 gradient buffer를 0으로 만든다.
+- `out.backward(torch.randn(1, 10))` : 분류 클래스가 10개라서 out의 차원이 1x10이다. 맞춰줘야한다.
+- `target` : 그냥 더미로 대충 설정해서 만든다. ground-truth다.
+- `nn.MSELoss()` : 로스는 MSE로 정한다.
+- `grad_fn` 을 통해 미분을 계산해야하는 이전 함수들을 확인할 수 있다.
+
+```py
+print('before: ', net.conv1.bias.grad)
+loss.backward()
+print('after: ', net.conv1.bias.grad)
+
+learning_rate = 0.01
+for f in net.parameters():
+    f.data.sub_(f.grad.data * learning_rate)
+```
+
+- loss에 대해 backward propagation을 하면 각 params에 대해 미분값이 구해진다.
+- 모든 params에 대해 gradient descent를 한 번 실행한다. 위 예제는 1 epoch다.
+
+```py
+import torch.optim as optim
+
+optimizer = optim.SGD(net.parameters(), lr=0.01)
+
+epoch = 100
+for i in range(epoch):
+    optimizer.zero_grad()
+    output = net(input)
+    loss = criterion(output, target)
+    loss.backward()
+    optimizer.step()
+```
+
+- 라이브러리를 활용해 더 쉽게 optimizer를 사용할 수 있다.
+- 매번 `zero_grad`를 하는 이유는 저걸 해주지 않으면 그라디언트가 매번 중첩되기 때문이다. 유저가 하도록 만든 이유는 그라디언트를 중첩해서 한 번에 업그레이드하는 경우도 있기 때문.
+- 처음 optiizer를 선언할 때 우리 모델의 parameters를 넣어주면 이 값을 업데이트하게 된다.
+- `optim`에 다른 optimizer가 구현되어있으니 원하는대로 사용하면 된다.
+
+## 5. Using prtrained model: ResNet
+
+source: [pytorch tutorial by @yunjey](https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/01-basics/pytorch_basics/main.py)
+
+```py
+resnet = torchvision.models.resnet18(pretrained=True)
+
+for param in resnet.parameters():
+    param.requires_grad = False
+
+resnet.fc = nn.Linear(resnet.fc.in_features, 100)
+
+images = Variable(torch.randn(10, 3, 224, 224))
+outputs = resnet(images)
+print (outputs.size())
+```
+
+- ResNet의 학습된 weight를 가져와서 사용해본다.
+- 마지막 FC layer의 dims만 나에게 맞는 클래스 수로 바꾸고(1000 -> 100), 그 바꾼 FC만 학습하기 위해 위처럼 for 반복을 돌아서 grad 계산 여부를 모두 False로 바꾼다.
+- 위처럼 output이 내가 정한 클래스 수로 나오는지 확인해보고, backward update를 하며 학습한다.
