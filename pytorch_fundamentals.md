@@ -215,3 +215,18 @@ print (outputs.size())
 - ResNet의 학습된 weight를 가져와서 사용해본다.
 - 마지막 FC layer의 dims만 나에게 맞는 클래스 수로 바꾸고(1000 -> 100), 그 바꾼 FC만 학습하기 위해 위처럼 for 반복을 돌아서 grad 계산 여부를 모두 False로 바꾼다.
 - 위처럼 output이 내가 정한 클래스 수로 나오는지 확인해보고, backward update를 하며 학습한다.
+
+## 6. Save model
+
+```py
+# Save and load the entire model.
+torch.save(resnet, 'model.pkl')
+model = torch.load('model.pkl')
+
+# Save and load only the model parameters(recommended).
+torch.save(resnet.state_dict(), 'params.pkl')
+resnet.load_state_dict(torch.load('params.pkl'))
+```
+
+- 위처럼 `torch.save(var, file_path)` , `torch.load(file_path)` 형태로 하면 된다.
+- 전체 모델보다는 parameter만 save하는것이 추천됨
