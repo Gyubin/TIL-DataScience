@@ -230,3 +230,88 @@ resnet.load_state_dict(torch.load('params.pkl'))
 
 - 위처럼 `torch.save(var, file_path)` , `torch.load(file_path)` 형태로 하면 된다.
 - 전체 모델보다는 parameter만 save하는것이 추천됨
+
+## 7. Data loader
+
+### 7.1 Sample Data
+
+MNIST, Fashion-MNIST, COCO 등 유명한 데이터셋을 굉장히 쉽게 다운받을 수 있다.
+
+```py
+import torchvision.datasets as dsets
+import torchvision.transforms as transforms
+
+train_set = dsets.CIFAR10(root='./data/',
+                          train=True, 
+                          transform=transforms.ToTensor(),
+                          download=True)
+
+image, label = train_dataset[0]
+```
+
+- dsets에서 다양한 데이터를 불러올 수 있다.: `MNIST`, `FashionMNIST`, `CocoCaptions`, `CIFAR10` 등
+- parameters(데이터셋마다 약간의 차이는 존재)
+    + `root` : dataset path 지정
+    + `download` : True 값을 주면 해당 path에 다운로드도 하게 된다.
+    + `train` : True면 train set이고, False면 test set이다.
+    + `transform` : 함수를 넣어서 데이터를 어떻게 변형할지 지정. `transforms.ToTensor()`는 PIL이나 ndarray를 torch Tensor로 바꾸는 함수
+    + `target_transform` : target(y값)을 변화시킬 때 사용하는 함수 지정
+- 원소는 `(X, y)` 튜플 형태로 구성되어있다.
+
+### 7.2 Data loader
+
+Raw dataset만 있으면 셔플, 미니배치, 스레드 등의 기능을 쉽게 사용할 수 있도록 해준다.
+
+```py
+import torch
+
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                           batch_size=100,
+                                           shuffle=True,
+                                           num_workers=2)
+
+# 1. iter 함수로 하나하나 순서대로 뽑을 수도 있고
+data_iter = iter(train_loader)
+images, labels = data_iter.next()
+
+# 2. 바로 for 반복 돌아도 된다.
+for images, labels in train_loader:
+    pass
+```
+
+- `torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None, num_workers=0, collate_fn=<function default_collate>, pin_memory=False, drop_last=False, timeout=0)`
+    + `dataset` : X, y 데이터셋
+    + `batch_size` : SGD에서 mini-batch 크기
+    + `shuffle` : 섞을건지 Boolean으로
+    + `sampler` : 데이터를 뽑는 분포, 규칙을 정하는 것을 `Sampler` 라는 torch의 클래스로 정해서 넣어준다. 이거 하려면 shuffle은 무조건 False로
+    + `batch_sampler` : sampler와 비슷하지만 리턴이 batch다.
+    + `num_workers` : process 수 지정
+    + `drop_last` : 배치 사이즈가 정확하게 안 나눠지면 마지막 배치는 버릴지 결정
+    + `timeout` : 항상 음수가 아닌 값을 줘야하고 양수값이면 일정 시간 이상 못 불러오면 취소한다.
+- iterable에서 한 번 뽑아올 때 batch size만큼의 샘플들이 뽑혀나온다.
+
+### 7.3 Custom dataset
+
+```py
+import torch.utils.data as data
+
+class CustomDataset(data.Dataset):
+    def __init__(self):
+        # file path, name 등의 것들 정의
+        pass
+    def __getitem__(self, index):
+        # 파일 읽고, 전처리하고, 최종 데이터셋을 리턴
+        pass
+    def __len__(self):
+        # 데이터셋 사이즈 지정
+        return 0 
+
+# Then, you can just use prebuilt torch's data loader. 
+my_d = CustomDataset()
+train_loader = torch.utils.data.DataLoader(dataset=my_d,
+                                           batch_size=100, 
+                                           shuffle=True,
+                                           num_workers=2)
+```
+
+내 고유의 데이터를 쓰는데, `DataLoader`를 이용하고싶다면 위처럼 데이터셋을 생성하면 된다. 상속만 잘 받고 주요 함수 구현해서 쓰자.
