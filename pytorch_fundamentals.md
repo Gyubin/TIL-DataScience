@@ -315,3 +315,24 @@ train_loader = torch.utils.data.DataLoader(dataset=my_d,
 ```
 
 내 고유의 데이터를 쓰는데, `DataLoader`를 이용하고싶다면 위처럼 데이터셋을 생성하면 된다. 상속만 잘 받고 주요 함수 구현해서 쓰자.
+
+## 8. Regression
+
+### 8.1 Linear regression
+
+```py
+class LinearRegression(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(LinearRegression, self).__init__()
+        self.linear = nn.Linear(input_size, output_size)  
+    
+    def forward(self, x):
+        out = self.linear(x)
+        return out
+```
+
+- `nn.Module` 상속받고, `__init__`에서 `super` 함수 호출해준다.
+- `nn.Linear` 함수는 weight matrix를 나타내는 것이므로 linear regression에서 feature를 몇 개 쓸건지, 결과값은 몇 개를 낼건지만 정해서 i, o size로 지정
+- `forward` 함수를 만들어 데이터 입력 함수 정한다. 나중에 이 함수 호출해서 optimize 한다.
+
+### 8.2 Logistic regression
