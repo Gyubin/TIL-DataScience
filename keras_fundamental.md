@@ -15,8 +15,8 @@ model = Sequential()
 from keras.layers import Activation, Dense
 
 model.add(Dense(10, input_shape = (13,), activation = 'sigmoid'))
-model.add(Dense(10, activation = 'sigmoid'))
-model.add(Dense(10, activation = 'sigmoid'))
+model.add(Dense(10, kernel_initializer='he_normal', activation = 'sigmoid'))
+model.add(Dense(10, kernel_initializer='he_normal', activation = 'sigmoid'))
 model.add(Dense(1))
 ```
 
@@ -25,6 +25,7 @@ model.add(Dense(1))
 - Activation도 쉽게 지정해서 쓸 수 있다. `relu`, `tanh`, `elu`, `sigmoid`
 - 위 코드처럼 한 번에 쓰는게 더 간결하지만, 따로 쓸 수도 있다.
     + `model.add(Activation('sigmoid'))`
+- weight initializer: Dense 함수의 파라미터로 he, xavier를 넣어줘서 사용가능.
 
 ### 1.2 Optimizer
 
