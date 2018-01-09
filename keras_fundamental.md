@@ -132,7 +132,7 @@ model.add(BatchNormalization())
 ```
 
 - ReLU같은 nonlinear activation 하기 전에, 모든 mini-batch에 대해서 수행
-- 위처럼 원하는 위치에 끼워넣으면 된다. 매우 간편
+- 다음 순서가 반복: **Dense-BatchNorm-Activation-Dropout**
 
 ### 2.2 Dropout
 
@@ -144,7 +144,7 @@ model.add(Dropout(0.2))
 ```
 
 - Dense, Activation 다음에 넣어주면 된다.
-- Dense-Activation-Dropout 순서가 계속 반복
+- 다음 순서가 반복: **Dense-BatchNorm-Activation-Dropout**
 
 ### 2.3 Model ensemble
 
@@ -193,7 +193,7 @@ print('Test accuracy:', accuracy_score(y_pred, y_test))
     + `hard` : majority rule voting
     + `soft` : 앙상블하는 모든 classifier의 확률 결과값들을 합해서 그 중 제일 높은 것을 취한다. well-calibrated classifiers일 때 사용을 추천한다고 한다.
 
-## 3. MNIST
+## 3. CNN with MNIST
 
 ### 3.1 Prepare data
 
@@ -213,3 +213,51 @@ y_te = to_categorical(y_te)
 - 데이터셋은 `keras.datasets`에서 쉽게 가져올 수 있다.
 - 위 주석 친 부분은 이미지를 flatten해서 벡터로 만드는 코드
 - `to_categorical(data)` 형태로 one-hot vector로 만들 수 있다.
+
+### 3.2 Library
+
+```py
+from keras.models import Sequential
+from keras import optimizers
+from keras.layers import Dense, Activation, Flatten, Conv2D, MaxPooling2D, AveragePooling2D, GlobalMaxPooling2D, ZeroPadding2D, Input
+from keras.models import Model
+from keras.preprocessing import image
+
+img = image.load_img('dog.jpg', target_size = (100, 100))
+img = image.img_to_array(img)
+```
+
+`keras.preprocessing.image` : 이미지 쉽게 로드하고 조정 가능. numpy array 형태로 아래처럼 변환할 수 있다.
+
+### 3.3 Padding
+
+```py
+# when padding = 'valid'
+model = Sequential()
+model.add(Conv2D(input_shape = (10, 10, 3), filters = 10, kernel_size = (3,3), strides = (1,1), padding = 'valid'))
+print(model.output_shape)
+
+# when padding = 'same'
+model = Sequential()
+model.add(Conv2D(input_shape = (10, 10, 3), filters = 10, kernel_size = (3,3), strides = (1,1), padding = 'same'))
+print(model.output_shape)
+
+# user-customized padding
+input_layer = Input(shape = (10, 10, 3))
+padding_layer = ZeroPadding2D(padding = (1,1))(input_layer)
+model = Model(inputs = input_layer, outputs = padding_layer)
+print(model.output_shape)
+```
+
+- valid는 패딩 없는 것, same은 resolution 유지되도록 padding 자동으로 준다.
+- `ZeroPadding2D`를 이용해서 패딩하는 레이어를 만들어서 사용할 수도 있다. 위처럼 내가 지정해서 (1,1) 패딩을 줄 수 있음
+
+### 3.4 Convolution layer
+
+```py
+model = Sequential()
+model.add(Conv2D(input_shape = (10, 10, 3), filters = 10, kernel_size = (3,3), strides = (1,1), padding = 'same'))
+print(model.output_shape)
+```
+
+`filters` 파라미터 값을 통해 필터 몇 개 쓸건지 정해준다. 나머지는 일반적인 딥러닝의 개념들
