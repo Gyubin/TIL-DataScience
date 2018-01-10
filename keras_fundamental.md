@@ -261,3 +261,32 @@ print(model.output_shape)
 ```
 
 `filters` 파라미터 값을 통해 필터 몇 개 쓸건지 정해준다. 나머지는 일반적인 딥러닝의 개념들
+
+### 3.5 Pooling
+
+```py
+# (10, 10, 10) -> (5, 5, 10)
+model.add(MaxPooling2D(pool_size = (2,2), padding = 'valid'))
+
+# (10, 10, 10) -> (9, 9, 10)
+model.add(MaxPooling2D(pool_size = (2,2), strides = (1,1), padding = 'valid'))
+
+# (10, 10, 10) -> (5, 5, 10)
+model.add(AveragePooling2D(pool_size = (2,2), padding = 'valid'))
+
+# (10, 10, 10) -> (None, 10)
+model.add(GlobalMaxPooling2D())
+```
+
+- 일반 `MaxPooling2D`에서 stride를 지정하지 않으면 `pool_size`와 같은 값이 된다.
+- Average, Global Max pooling 다 가능
+
+### 3.6 Flatten
+
+```py
+model = Sequential()
+model.add(Conv2D(input_shape = (10, 10, 3), filters = 10, kernel_size = (3,3), strides = (1,1), padding = 'same'))
+model.add(Flatten())
+```
+
+`Flatten()` 레이어를 추가해주면 벡터로 쫙 펴준다. Fully connected 하기 직전.
