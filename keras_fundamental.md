@@ -290,3 +290,57 @@ model.add(Flatten())
 ```
 
 `Flatten()` 레이어를 추가해주면 벡터로 쫙 펴준다. Fully connected 하기 직전.
+
+### 3.7 Example
+
+![inception](https://raw.githubusercontent.com/iamaaditya/iamaaditya.github.io/master/images/inception_1x1.png)
+
+```py
+def NetworkInNetwork():
+    model = Sequential()
+    
+    model.add(Conv2D(input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3]), filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(Conv2D(filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(Conv2D(filters = 25, kernel_size = (1,1), strides = (1,1), padding = 'valid', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(MaxPooling2D(pool_size = (2,2)))
+
+    model.add(Conv2D(filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(Conv2D(filters = 25, kernel_size = (1,1), strides = (1,1), padding = 'valid', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(Conv2D(filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(Conv2D(filters = 25, kernel_size = (1,1), strides = (1,1), padding = 'valid', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(MaxPooling2D(pool_size = (2,2)))
+
+    model.add(Conv2D(filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(Conv2D(filters = 25, kernel_size = (1,1), strides = (1,1), padding = 'valid', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(Conv2D(filters = 50, kernel_size = (3,3), strides = (1,1), padding = 'same', kernel_initializer='he_normal'))
+    model.add(Conv2D(filters = 25, kernel_size = (1,1), strides = (1,1), padding = 'valid', kernel_initializer='he_normal'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+
+    model.add(MaxPooling2D(pool_size = (2,2)))
+    
+    model.add(Flatten())
+    model.add(Dense(50, activation = 'relu', kernel_initializer='he_normal'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10, activation = 'softmax', kernel_initializer='he_normal'))
+    
+    adam = optimizers.Adam(lr = 0.001)
+    model.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+    
+    return model 
+```
