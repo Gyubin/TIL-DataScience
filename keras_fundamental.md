@@ -344,3 +344,5 @@ def NetworkInNetwork():
     
     return model 
 ```
+
+위 모델은 Inception 구조를 온전히 구현한 것은 아니고, 1x1 convolution을 통한 dimension reduction의 효과를 보여주는 예제다.
