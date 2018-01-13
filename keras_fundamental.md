@@ -193,9 +193,11 @@ print('Test accuracy:', accuracy_score(y_pred, y_test))
     + `hard` : majority rule voting
     + `soft` : 앙상블하는 모든 classifier의 확률 결과값들을 합해서 그 중 제일 높은 것을 취한다. well-calibrated classifiers일 때 사용을 추천한다고 한다.
 
-## 3. CNN with MNIST
+## 3. CNN
 
-### 3.1 Prepare data
+### 3.1 Components
+
+#### 3.1.1 MNIST data
 
 ```py
 from sklearn.model_selection import train_test_split
@@ -214,7 +216,7 @@ y_te = to_categorical(y_te)
 - 위 주석 친 부분은 이미지를 flatten해서 벡터로 만드는 코드
 - `to_categorical(data)` 형태로 one-hot vector로 만들 수 있다.
 
-### 3.2 Library
+#### 3.1.2 Library
 
 ```py
 from keras.models import Sequential
@@ -229,7 +231,7 @@ img = image.img_to_array(img)
 
 `keras.preprocessing.image` : 이미지 쉽게 로드하고 조정 가능. numpy array 형태로 아래처럼 변환할 수 있다.
 
-### 3.3 Padding
+#### 3.1.3 Padding
 
 ```py
 # when padding = 'valid'
@@ -252,7 +254,7 @@ print(model.output_shape)
 - valid는 패딩 없는 것, same은 resolution 유지되도록 padding 자동으로 준다.
 - `ZeroPadding2D`를 이용해서 패딩하는 레이어를 만들어서 사용할 수도 있다. 위처럼 내가 지정해서 (1,1) 패딩을 줄 수 있음
 
-### 3.4 Convolution layer
+#### 3.1.4 Convolution layer
 
 ```py
 model = Sequential()
@@ -262,7 +264,7 @@ print(model.output_shape)
 
 `filters` 파라미터 값을 통해 필터 몇 개 쓸건지 정해준다. 나머지는 일반적인 딥러닝의 개념들
 
-### 3.5 Pooling
+#### 3.1.5 Pooling
 
 ```py
 # (10, 10, 10) -> (5, 5, 10)
@@ -281,7 +283,7 @@ model.add(GlobalMaxPooling2D())
 - 일반 `MaxPooling2D`에서 stride를 지정하지 않으면 `pool_size`와 같은 값이 된다.
 - Average, Global Max pooling 다 가능
 
-### 3.6 Flatten
+#### 3.1.6 Flatten
 
 ```py
 model = Sequential()
@@ -291,7 +293,7 @@ model.add(Flatten())
 
 `Flatten()` 레이어를 추가해주면 벡터로 쫙 펴준다. Fully connected 하기 직전.
 
-### 3.7 Example
+### 3.2 Network in Network example
 
 ![inception](https://raw.githubusercontent.com/iamaaditya/iamaaditya.github.io/master/images/inception_1x1.png)
 
@@ -346,3 +348,56 @@ def NetworkInNetwork():
 ```
 
 위 모델은 Inception 구조를 온전히 구현한 것은 아니고, 1x1 convolution을 통한 dimension reduction의 효과를 보여주는 예제다.
+
+### 3.3 Sentence classification
+
+#### 3.3.1 User defined
+
+```py
+def convolution():
+    inn = Input(shape = (sequence_length, embedding_dimension, 1))
+    convolutions = []
+
+    for fs in filter_sizes:
+        conv = Conv2D(filters = 100, kernel_size = (fs, embedding_dimension), strides = 1, padding = "valid")(inn)
+        nonlinearity = Activation('relu')(conv)
+        maxpool = MaxPooling2D(pool_size = (sequence_length - fs + 1, 1), padding = "valid")(nonlinearity)
+        convolutions.append(maxpool)
+        
+    outt = concatenate(convolutions)
+    model = Model(inputs = inn, outputs = outt)
+        
+    return model
+```
+
+`convolution` : convolution filter 여러개 사용한 결과들을 합치는 함수를 따로 만들었다.
+
+#### 3.3.2
+
+```py
+def imdb_sentement():
+    model = Sequential()
+    model.add(Embedding(input_dim = 3000, output_dim = embedding_dimension, input_length = sequence_length))
+    model.add(Reshape((sequence_length, embedding_dimension, 1), input_shape = (sequence_length, embedding_dimension)))
+    model.add(Dropout(0.5))
+
+    model.add(convolution())
+    
+    model.add(Flatten())
+    model.add(Dense(10))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10))
+    model.add(Activation('relu'))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(1))
+    model.add(Activation('sigmoid'))
+
+    adam = optimizers.Adam(lr = 0.001)
+
+    model.compile(loss='binary_crossentropy', optimizer=adam , metrics=['accuracy'])
+    
+    return model
+```
