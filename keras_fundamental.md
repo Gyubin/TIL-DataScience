@@ -349,7 +349,9 @@ def NetworkInNetwork():
 
 위 모델은 Inception 구조를 온전히 구현한 것은 아니고, 1x1 convolution을 통한 dimension reduction의 효과를 보여주는 예제다.
 
-### 3.3 Sentence classification
+### 3.3 Sentence classification - Yoon Kim
+
+![sen-cls](http://d3kbpzbmcynnmx.cloudfront.net/wp-content/uploads/2015/11/Screen-Shot-2015-11-06-at-12.05.40-PM.png)
 
 #### 3.3.1 User defined
 
@@ -370,12 +372,12 @@ def convolution():
     return model
 ```
 
-`convolution` : convolution filter 여러개 사용한 결과들을 합치는 함수를 따로 만들었다.
+convolution filter 여러개 사용한 결과들을 합치는 함수를 따로 만들었다.
 
-#### 3.3.2
+#### 3.3.2 Model
 
 ```py
-def imdb_sentement():
+def sentiment_model():
     model = Sequential()
     model.add(Embedding(input_dim = 3000, output_dim = embedding_dimension, input_length = sequence_length))
     model.add(Reshape((sequence_length, embedding_dimension, 1), input_shape = (sequence_length, embedding_dimension)))
@@ -400,4 +402,20 @@ def imdb_sentement():
     model.compile(loss='binary_crossentropy', optimizer=adam , metrics=['accuracy'])
     
     return model
+```
+
+#### 3.3.3 Train/eval
+
+```py
+model = sentiment_model()
+
+history = model.fit(X_train, y_train, batch_size = 50, epochs = 100, validation_split = 0.2, verbose = 0)
+
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.legend(['training', 'validation'], loc = 'upper left')
+plt.show()
+
+results = model.evaluate(X_test, y_test)
+print('Test accuracy: ', results[1])
 ```
