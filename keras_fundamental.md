@@ -419,3 +419,24 @@ plt.show()
 results = model.evaluate(X_test, y_test)
 print('Test accuracy: ', results[1])
 ```
+
+### 3.4 Pretrained weights
+
+```py
+import numpy as np
+
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+from keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
+
+model = ResNet50(weights='imagenet')
+
+img = load_img('dog.jpg', target_size = (224, 224))
+img = img_to_array(img)
+img = np.expand_dims(img, axis=0)
+
+pred_class = model.predict(img)
+top_n = decode_predictions(pred_class, top=5)
+```
+
+- `ResNet50(weights='imagenet')` : imagenet의 pretrained weight를 불러온다.
+- `predict`를 하면 `decode_predictions` 함수를 써야 원하는 결과값을 뽑을 수 있다.
