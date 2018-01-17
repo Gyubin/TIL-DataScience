@@ -440,3 +440,27 @@ top_n = decode_predictions(pred_class, top=5)
 
 - `ResNet50(weights='imagenet')` : imagenet의 pretrained weight를 불러온다.
 - `predict`를 하면 `decode_predictions` 함수를 써야 원하는 결과값을 뽑을 수 있다.
+
+## 4. RNN
+
+### 4.1 Vanila RNN
+
+```py
+def vanilla_rnn():
+    model = Sequential()
+    model.add(SimpleRNN(50, input_shape = (49,1), return_sequences = False))
+    model.add(Dense(46))
+    model.add(Activation('softmax'))
+    
+    adam = optimizers.Adam(lr = 0.001)
+    model.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+    
+    return model
+```
+
+- `SimpleRNN`
+    + `units` : 메모리 셀의 개수
+    + `activation='tanh'` : 기본값이 tanh
+    + `use_bias=True` : bias 사용 여부.
+    + `return_sequences=False` : 모든 sequence를 다 리턴할건지, 마지막만 리턴할건지
+    + `return_state=False` : 마지막 state를 리턴할건지 정하기
