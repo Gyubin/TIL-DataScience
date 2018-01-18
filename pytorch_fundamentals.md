@@ -229,7 +229,7 @@ resnet.load_state_dict(torch.load('params.pkl'))
 ```
 
 - 위처럼 `torch.save(var, file_path)` , `torch.load(file_path)` 형태로 하면 된다.
-- 전체 모델보다는 parameter만 save하는것이 추천됨
+- 전체 모델보다는 parameter만 save하는것이 추천됨. model instance에서 `model.state_dict()`를 호출하면 orderedDict 객체에 parameter가 담겨서 리턴된다.
 
 ## 7. Data loader
 
