@@ -464,3 +464,19 @@ def vanilla_rnn():
     + `use_bias=True` : bias 사용 여부.
     + `return_sequences=False` : 모든 sequence를 다 리턴할건지, 마지막만 리턴할건지
     + `return_state=False` : 마지막 state를 리턴할건지 정하기
+
+```py
+def stacked_vanilla_rnn():
+    model = Sequential()
+    model.add(SimpleRNN(50, input_shape = (49,1), return_sequences = True))
+    model.add(SimpleRNN(50, return_sequences = False))
+    model.add(Dense(46))
+    model.add(Activation('softmax'))
+    
+    adam = optimizers.Adam(lr = 0.001)
+    model.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+    
+    return model
+```
+
+만약에 RNN을 deep하게 쌓고 싶다면 위처럼 추가로 적어주면 된다. 다만 첫 번째는 모든 sequence를 다 리턴해줘야하기 때문에 파라미터에 True값을 준다.
